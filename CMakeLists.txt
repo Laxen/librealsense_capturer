@@ -1,7 +1,6 @@
-#cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 cmake_minimum_required(VERSION 3.1.0)
 
-project(test_librealsense)
+project(librealsense_capturer)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
@@ -31,7 +30,6 @@ find_library(GLFW_LIBRARIES NAMES glfw glfw3
 list(APPEND DEPENDENCIES m ${GLFW_LIBRARIES} ${LIBUSB1_LIBRARIES})
 include_directories(${GLFW_INCLUDE_DIR})
 
-add_executable (test_librealsense test_librealsense.cpp)
-target_link_libraries (test_librealsense ${DEPENDENCIES})
-#target_link_libraries (test_librealsense)
+add_executable (librealsense_capturer librealsense_capturer.cpp)
+target_link_libraries (librealsense_capturer ${DEPENDENCIES})
 #g++ -std=c++11 ../test_librealsense.cpp -lrealsense2 -o test_librealsense
