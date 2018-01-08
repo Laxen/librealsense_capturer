@@ -8,6 +8,9 @@
 #include <algorithm>            // std::min, std::max
 #include <fstream>
 
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+
 // Struct for managing rotation of pointcloud view
 struct state {
 	state() : yaw(0.0), pitch(0.0), last_x(0.0), last_y(0.0),
@@ -23,7 +26,7 @@ struct cloud_point {
 // Helper functions
 void register_glfw_callbacks(window& app, state& app_state);
 void draw_pointcloud(window& app, state& app_state, rs2::points& points);
-void write_to_pcd(std::vector<cloud_point> cloud_points);
+void write_to_pcd(std::vector<pcl::PointXYZRGBA> cloud_points);
 
 bool save = false;
 int save_idx = 0;
@@ -103,7 +106,9 @@ int main(int argc, char * argv[]) try
 		float color_point[3];
 		float scaled_depth;
 
-		std::vector<cloud_point> cloud_points;
+		//std::vector<cloud_point> cloud_points;
+		std::vector<pcl::PointXYZRGBA> cloud_points;
+		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBA>());
 
 		if(save) {
 			for(int y = 0; y < 480; y++) {
@@ -115,7 +120,9 @@ int main(int argc, char * argv[]) try
 					if (color_point[2] <= 0.1f || color_point[2] > 5.f) {
 						continue;
 					}
-					cloud_point p;
+					
+					pcl::PointXYZRGBA p;
+					//cloud_point p;
 					p.x = color_point[0];
 					p.y = color_point[1];
 					p.z = color_point[2];
@@ -128,10 +135,13 @@ int main(int argc, char * argv[]) try
 					p.g = static_cast<uint8_t>(color_data[offset + 1]);
 					p.b = static_cast<uint8_t>(color_data[offset + 2]);
 					cloud_points.push_back(p);
+					cloud->push_back(p);
 				}
 			}
 
 			write_to_pcd(cloud_points);
+			pcl::io::savePCDFileBinaryCompressed("pc_bin.pcd", *cloud);
+			pcl::io::savePCDFile("pc_ascii.pcd", *cloud);
 		}
 
 		// Wait for the next set of frames from the camera
@@ -165,7 +175,7 @@ catch (const std::exception & e)
 	return EXIT_FAILURE;
 }
 
-void write_to_pcd(std::vector<cloud_point> cloud_points) {
+void write_to_pcd(std::vector<pcl::PointXYZRGBA> cloud_points) {
 	std::cout << "Saving cloud as " << save_idx << "..." << std::endl;
 
 	std::ofstream ofs;
@@ -185,8 +195,9 @@ void write_to_pcd(std::vector<cloud_point> cloud_points) {
 	ofs << "DATA ascii" << "\n";
 	
 	for(int i = 0; i < cloud_points.size(); i++) {
-		cloud_point p = cloud_points[i];
-		int rgb = ((int)p.r) << 16 | ((int)p.g) << 8 | ((int)p.b); 
+		//cloud_point p = cloud_points[i];
+		pcl::PointXYZRGBA p = cloud_points[i];
+		int rgb = ((int)p.r) << 16 | ((int)p.g) << 8 | ((int)p.b);
 		ofs << p.x << " " << p.y << " " << p.z << " " << rgb << "\n";
 	}
 

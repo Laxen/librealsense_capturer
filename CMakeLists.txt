@@ -5,6 +5,7 @@ project(librealsense_capturer)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 find_package(OpenGL)
+find_package(PCL 1.8 REQUIRED)
 set(DEPENDENCIES realsense2 ${OPENGL_LIBRARIES})
 
 # Find glfw header
@@ -29,7 +30,9 @@ find_library(GLFW_LIBRARIES NAMES glfw glfw3
 )
 list(APPEND DEPENDENCIES m ${GLFW_LIBRARIES} ${LIBUSB1_LIBRARIES})
 include_directories(${GLFW_INCLUDE_DIR})
+include_directories(${PCL_INCLUDE_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 add_executable (librealsense_capturer librealsense_capturer.cpp)
-target_link_libraries (librealsense_capturer ${DEPENDENCIES})
+target_link_libraries (librealsense_capturer ${DEPENDENCIES} ${PCL_LIBRARIES})
 #g++ -std=c++11 ../test_librealsense.cpp -lrealsense2 -o test_librealsense
