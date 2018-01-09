@@ -18,18 +18,14 @@ struct state {
 	double yaw, pitch, last_x, last_y; bool ml; float offset_x, offset_y; texture tex;
 };
 
-struct cloud_point {
-	float x, y, z;
-	int r, g, b;
-};
-
 // Helper functions
 void register_glfw_callbacks(window& app, state& app_state);
 void draw_pointcloud(window& app, state& app_state, rs2::points& points);
 void write_to_pcd(std::vector<pcl::PointXYZRGBA> cloud_points);
 
 bool save = false;
-int save_idx = 0;
+std::string save_path = "/home/robot/AA/share_files/";
+int cloud_idx = 0;
 
 int main(int argc, char * argv[]) try
 {
@@ -106,8 +102,6 @@ int main(int argc, char * argv[]) try
 		float color_point[3];
 		float scaled_depth;
 
-		//std::vector<cloud_point> cloud_points;
-		std::vector<pcl::PointXYZRGBA> cloud_points;
 		pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZRGBA>());
 
 		if(save) {
@@ -122,7 +116,6 @@ int main(int argc, char * argv[]) try
 					}
 					
 					pcl::PointXYZRGBA p;
-					//cloud_point p;
 					p.x = color_point[0];
 					p.y = color_point[1];
 					p.z = color_point[2];
@@ -134,14 +127,17 @@ int main(int argc, char * argv[]) try
 					p.r = static_cast<uint8_t>(color_data[offset]);
 					p.g = static_cast<uint8_t>(color_data[offset + 1]);
 					p.b = static_cast<uint8_t>(color_data[offset + 2]);
-					cloud_points.push_back(p);
 					cloud->push_back(p);
 				}
 			}
 
-			write_to_pcd(cloud_points);
-			pcl::io::savePCDFileBinaryCompressed("pc_bin.pcd", *cloud);
-			pcl::io::savePCDFile("pc_ascii.pcd", *cloud);
+			std::ostringstream oss;
+			oss << save_path << cloud_idx << ".pcd";
+			std::cout << "Saving cloud in " << oss.str() << std::endl;
+			pcl::io::savePCDFileBinaryCompressed(oss.str(), *cloud);
+			save = false;
+			cloud_idx++;
+			std::cout << "Cloud saved!" << std::endl;
 		}
 
 		// Wait for the next set of frames from the camera
@@ -175,6 +171,7 @@ catch (const std::exception & e)
 	return EXIT_FAILURE;
 }
 
+/*
 void write_to_pcd(std::vector<pcl::PointXYZRGBA> cloud_points) {
 	std::cout << "Saving cloud as " << save_idx << "..." << std::endl;
 
@@ -207,6 +204,7 @@ void write_to_pcd(std::vector<pcl::PointXYZRGBA> cloud_points) {
 	save_idx++;
 	std::cout << "Cloud saved!" << std::endl;
 }
+*/
 
 // Registers the state variable and callbacks to allow mouse control of the pointcloud
 void register_glfw_callbacks(window& app, state& app_state)
@@ -218,8 +216,8 @@ void register_glfw_callbacks(window& app, state& app_state)
 
 	app.on_mouse_scroll = [&](double xoffset, double yoffset)
 	{
-		app_state.offset_x += static_cast<float>(xoffset);
-		app_state.offset_y += static_cast<float>(yoffset);
+		app_state.offset_x -= static_cast<float>(xoffset);
+		app_state.offset_y -= static_cast<float>(yoffset);
 	};
 
 	app.on_mouse_move = [&](double x, double y)
@@ -284,8 +282,10 @@ void draw_pointcloud(window& app, state& app_state, rs2::points& points)
 	glBindTexture(GL_TEXTURE_2D, app_state.tex.get_gl_handle());
 	float tex_border_color[] = { 0.8f, 0.8f, 0.8f, 0.8f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, tex_border_color);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, 0x812F); // GL_CLAMP_TO_EDGE
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 0x812F); // GL_CLAMP_TO_EDGE
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, 0x812F); // GL_CLAMP_TO_EDGE
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 0x812F); // GL_CLAMP_TO_EDGE
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); // GL_CLAMP_TO_BORDER
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER); // GL_CLAMP_TO_BORDER
 	glBegin(GL_POINTS);
 
 
