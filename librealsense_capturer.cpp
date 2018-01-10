@@ -11,6 +11,9 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 // Struct for managing rotation of pointcloud view
 struct state {
 	state() : yaw(0.0), pitch(0.0), last_x(0.0), last_y(0.0),
@@ -96,13 +99,12 @@ int main(int argc, char * argv[]) try
 			}	
 		}
 
-		//rs2::align align(RS2_STREAM_COLOR);
-		rs2::align align(RS2_STREAM_DEPTH);
+		rs2::align align(RS2_STREAM_COLOR);
+		//rs2::align align(RS2_STREAM_DEPTH);
 		//rs2::frameset processed_frames = align.proccess(frames);
 		rs2::frameset processed_frames = frames;
 		const uint16_t* depth_data = reinterpret_cast<const uint16_t*> (processed_frames.get_depth_frame().get_data());
 		const uint8_t* color_data = reinterpret_cast<const uint8_t*> (processed_frames.get_color_frame().get_data());
-		//float color_point[3];
 		float color_pixel[2];
 		float scaled_depth;
 		float depth_point[3];
@@ -146,6 +148,7 @@ int main(int argc, char * argv[]) try
 				}
 			}
 
+
 			/*
 			for(int y = 0; y < 480; y++) {
 				for(int x = 0; x < 640; x++) {
@@ -174,10 +177,17 @@ int main(int argc, char * argv[]) try
 			}
 			*/
 
-			std::ostringstream oss;
-			oss << save_path << cloud_idx << ".pcd";
-			std::cout << "Saving cloud in " << oss.str() << std::endl;
-			pcl::io::savePCDFileBinaryCompressed(oss.str(), *cloud);
+			std::ostringstream path;
+			path << save_path << cloud_idx << ".png";
+
+			rs2::video_frame vf = processed_frames.get_color_frame();
+			stbi_write_png(path.str().c_str(), vf.get_width(), vf.get_height(),
+				vf.get_bytes_per_pixel(), vf.get_data(), vf.get_stride_in_bytes());
+
+			path.str("");
+			path << save_path << cloud_idx << ".pcd";
+			std::cout << "Saving cloud in " << path.str() << std::endl;
+			pcl::io::savePCDFileBinaryCompressed(path.str(), *cloud);
 			save = false;
 			cloud_idx++;
 			std::cout << "Cloud saved!" << std::endl;
@@ -213,41 +223,6 @@ catch (const std::exception & e)
 	std::cerr << e.what() << std::endl;
 	return EXIT_FAILURE;
 }
-
-/*
-void write_to_pcd(std::vector<pcl::PointXYZRGBA> cloud_points) {
-	std::cout << "Saving cloud as " << save_idx << "..." << std::endl;
-
-	std::ofstream ofs;
-	std::ostringstream oss;
-	oss << save_idx;
-	ofs.open(oss.str() + ".pcd");
-
-	ofs << "VERSION .7" << "\n";
-	ofs << "FIELDS x y z rgb" << "\n";
-	ofs << "SIZE 4 4 4 4" << "\n";
-	ofs << "TYPE F F F U" << "\n";
-	ofs << "COUNT 1 1 1 1" << "\n";
-	ofs << "WIDTH " << cloud_points.size() << "\n";
-	ofs << "HEIGHT 1" << "\n";
-	ofs << "VIEWPOINT 0 0 0 1 0 0 0" << "\n";
-	ofs << "POINTS " << cloud_points.size() << "\n";
-	ofs << "DATA ascii" << "\n";
-	
-	for(int i = 0; i < cloud_points.size(); i++) {
-		//cloud_point p = cloud_points[i];
-		pcl::PointXYZRGBA p = cloud_points[i];
-		int rgb = ((int)p.r) << 16 | ((int)p.g) << 8 | ((int)p.b);
-		ofs << p.x << " " << p.y << " " << p.z << " " << rgb << "\n";
-	}
-
-	ofs.close();
-
-	save = false;
-	save_idx++;
-	std::cout << "Cloud saved!" << std::endl;
-}
-*/
 
 // Registers the state variable and callbacks to allow mouse control of the pointcloud
 void register_glfw_callbacks(window& app, state& app_state)
