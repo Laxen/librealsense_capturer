@@ -54,9 +54,11 @@ int main(int argc, char * argv[]) try
 	rs2::pipeline_profile profile = pipe.start(cfg);
 	float depth_scale = profile.get_device().first<rs2::depth_sensor>().get_depth_scale();
 
-	rs2_intrinsics color_intrinsics = profile.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>().get_intrinsics();
-	rs2_intrinsics depth_intrinsics = profile.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>().get_intrinsics();
-	rs2_extrinsics depth_extrinsics = profile.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>().get_extrinsics_to(profile.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>());
+	rs2::video_stream_profile color_profile = profile.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>();
+	rs2::video_stream_profile depth_profile = profile.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>();
+	rs2_intrinsics color_intrinsics = color_profile.get_intrinsics();
+	rs2_intrinsics depth_intrinsics = depth_profile.get_intrinsics();
+	rs2_extrinsics depth_extrinsics = depth_profile.get_extrinsics_to(color_profile);
 
 	while (app) // Application still alive?
 	{
@@ -93,13 +95,13 @@ int main(int argc, char * argv[]) try
 
 				pipe.stop();
 				profile = pipe.start(cfg);
-				depth_scale = profile.get_device().first<rs2::depth_sensor>().get_depth_scale();
-				color_intrinsics = profile.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>().get_intrinsics();
-				depth_intrinsics = profile.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>().get_intrinsics();
+				//depth_scale = profile.get_device().first<rs2::depth_sensor>().get_depth_scale();
+				//color_intrinsics = profile.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>().get_intrinsics();
+				//depth_intrinsics = profile.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>().get_intrinsics();
 			}	
 		}
 
-		rs2::align align(RS2_STREAM_COLOR);
+		//rs2::align align(RS2_STREAM_COLOR);
 		//rs2::align align(RS2_STREAM_DEPTH);
 		//rs2::frameset processed_frames = align.proccess(frames);
 		rs2::frameset processed_frames = frames;
