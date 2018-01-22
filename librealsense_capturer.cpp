@@ -113,7 +113,7 @@ int main(int argc, char * argv[]) try
 
 					uint16_t depth_value = depth_data[index];
 					scaled_depth = depth_value * depth_scale;
-					if(depth_value == 0) continue;
+					if(depth_value == 0 && scaled_depth > 20) continue;
 
 					float depth_pixel[2] = {static_cast<float>(x), static_cast<float>(y)};
 					rs2_deproject_pixel_to_point(depth_point, &depth_intrinsics, depth_pixel, scaled_depth);
