@@ -1,7 +1,4 @@
-// License: Apache 2.0. See LICENSE file in root directory.
-// Copyright(c) 2015-2017 Intel Corporation. All Rights Reserved.
-
-#include <librealsense2/rs.hpp> // Include RealSense Cross Platform API
+#include <librealsense2/rs.hpp>
 #include <librealsense2/rsutil.h>
 #include "example.hpp"          // Include short list of convenience functions for rendering
 
@@ -24,10 +21,10 @@ struct state {
 // Helper functions
 void register_glfw_callbacks(window& app, state& app_state);
 void draw_pointcloud(window& app, state& app_state, rs2::points& points);
-void write_to_pcd(std::vector<pcl::PointXYZRGBA> cloud_points);
 
 bool save = false;
-std::string save_path = "/home/robot/AA/share_files/";
+//std::string save_path = "/home/robot/AA/share_files/";
+std::string save_path = "/home/robot/librealsense_capturer/pointclouds/";
 int cloud_idx = 0;
 
 int main(int argc, char * argv[]) try
@@ -95,15 +92,9 @@ int main(int argc, char * argv[]) try
 
 				pipe.stop();
 				profile = pipe.start(cfg);
-				//depth_scale = profile.get_device().first<rs2::depth_sensor>().get_depth_scale();
-				//color_intrinsics = profile.get_stream(RS2_STREAM_COLOR).as<rs2::video_stream_profile>().get_intrinsics();
-				//depth_intrinsics = profile.get_stream(RS2_STREAM_DEPTH).as<rs2::video_stream_profile>().get_intrinsics();
 			}	
 		}
 
-		//rs2::align align(RS2_STREAM_COLOR);
-		//rs2::align align(RS2_STREAM_DEPTH);
-		//rs2::frameset processed_frames = align.proccess(frames);
 		rs2::frameset processed_frames = frames;
 		const uint16_t* depth_data = reinterpret_cast<const uint16_t*> (processed_frames.get_depth_frame().get_data());
 		const uint8_t* color_data = reinterpret_cast<const uint8_t*> (processed_frames.get_color_frame().get_data());
@@ -149,35 +140,6 @@ int main(int argc, char * argv[]) try
 					cloud->push_back(p);
 				}
 			}
-
-
-			/*
-			for(int y = 0; y < 480; y++) {
-				for(int x = 0; x < 640; x++) {
-					uint16_t depth_value = depth_data[640*y + x];
-					scaled_depth = depth_value * depth_scale;
-					float color_pixel[2] = {static_cast<float>(x), static_cast<float>(y)};
-					rs2_deproject_pixel_to_point(color_point, &color_intrinsics, color_pixel, scaled_depth);
-					if (color_point[2] <= 0.1f || color_point[2] > 5.f) {
-						continue;
-					}
-					
-					pcl::PointXYZRGBA p;
-					p.x = color_point[0];
-					p.y = color_point[1];
-					p.z = color_point[2];
-
-					int i = static_cast<int>(color_pixel[0]);
-					int j = static_cast<int>(color_pixel[1]);
-					int offset = i*3 + j*color_intrinsics.width*3;
-
-					p.r = static_cast<uint8_t>(color_data[offset]);
-					p.g = static_cast<uint8_t>(color_data[offset + 1]);
-					p.b = static_cast<uint8_t>(color_data[offset + 2]);
-					cloud->push_back(p);
-				}
-			}
-			*/
 
 			std::ostringstream path;
 			path << save_path << cloud_idx << ".png";
@@ -302,8 +264,6 @@ void draw_pointcloud(window& app, state& app_state, rs2::points& points)
 	glBindTexture(GL_TEXTURE_2D, app_state.tex.get_gl_handle());
 	float tex_border_color[] = { 0.8f, 0.8f, 0.8f, 0.8f };
 	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, tex_border_color);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, 0x812F); // GL_CLAMP_TO_EDGE
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 0x812F); // GL_CLAMP_TO_EDGE
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER); // GL_CLAMP_TO_BORDER
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER); // GL_CLAMP_TO_BORDER
 	glBegin(GL_POINTS);
