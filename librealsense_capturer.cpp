@@ -24,7 +24,7 @@ void draw_pointcloud(window& app, state& app_state, rs2::points& points);
 
 bool save = false;
 //std::string save_path = "/home/robot/AA/share_files/";
-std::string save_path = "/home/robot/librealsense_capturer/pointclouds/";
+std::string save_path = "/home/robot/pointclouds/";
 int cloud_idx = 0;
 
 int main(int argc, char * argv[]) try
