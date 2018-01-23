@@ -23,9 +23,10 @@ void register_glfw_callbacks(window& app, state& app_state);
 void draw_pointcloud(window& app, state& app_state, rs2::points& points);
 
 bool save = false;
-//std::string save_path = "/home/robot/AA/share_files/";
 std::string save_path = "/home/robot/pointclouds/";
 int cloud_idx = 0;
+
+int MAX_DEPTH = 1;
 
 int main(int argc, char * argv[]) try
 {
@@ -113,7 +114,7 @@ int main(int argc, char * argv[]) try
 
 					uint16_t depth_value = depth_data[index];
 					scaled_depth = depth_value * depth_scale;
-					if(depth_value == 0 && scaled_depth > 20) continue;
+					if(depth_value == 0 || scaled_depth > MAX_DEPTH) continue;
 
 					float depth_pixel[2] = {static_cast<float>(x), static_cast<float>(y)};
 					rs2_deproject_pixel_to_point(depth_point, &depth_intrinsics, depth_pixel, scaled_depth);
@@ -149,7 +150,12 @@ int main(int argc, char * argv[]) try
 				vf.get_bytes_per_pixel(), vf.get_data(), vf.get_stride_in_bytes());
 
 			path.str("");
-			path << save_path << cloud_idx << ".pcd";
+			path << save_path;
+			if(!boost::filesystem::exists(path.str())) {
+				boost::filesystem::create_directory(path.str());
+			}
+			path << cloud_idx << ".pcd";
+
 			std::cout << "Saving cloud in " << path.str() << std::endl;
 			pcl::io::savePCDFileBinaryCompressed(path.str(), *cloud);
 			save = false;
